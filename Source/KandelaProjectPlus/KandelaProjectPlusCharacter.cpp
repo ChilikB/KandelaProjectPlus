@@ -10,6 +10,16 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "GASprint.h"
+#include "InputMappingContext.h"
+#include "GameFramework/PlayerController.h"
+#include "GameplayEffect.h"
+#include "GEStaminaInit.h"
+#include "GEStaminaRegen.h"
+#include "CharacterAttributeSet.h"
+#include "AbilitySystemComponent.h"
+#include "GameplayEffectTypes.h"
+#include "Abilities/GameplayAbility.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -52,6 +62,9 @@ AKandelaProjectPlusCharacter::AKandelaProjectPlusCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+
+	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	AttributeSet = CreateDefaultSubobject<UCharacterAttributeSet>(TEXT("AttributeSet"));
 }
 
 void AKandelaProjectPlusCharacter::BeginPlay()
@@ -66,6 +79,17 @@ void AKandelaProjectPlusCharacter::BeginPlay()
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
+	}
+
+	//Add GAS
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->InitAbilityActorInfo(this, this);
+
+		ApplyEffectToSelf(UGEStaminaInit::StaticClass());
+		ApplyEffectToSelf(UGEStaminaRegen::StaticClass());
+
+		GiveSprintAbility();
 	}
 }
 
@@ -86,6 +110,13 @@ void AKandelaProjectPlusCharacter::SetupPlayerInputComponent(UInputComponent* Pl
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AKandelaProjectPlusCharacter::Look);
+
+		if (SprintAction)
+		{
+			EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &AKandelaProjectPlusCharacter::OnSprintStarted);
+			EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &AKandelaProjectPlusCharacter::OnSprintCompleted);
+			EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Canceled, this, &AKandelaProjectPlusCharacter::OnSprintCompleted);
+		}
 	}
 	else
 	{
@@ -127,4 +158,47 @@ void AKandelaProjectPlusCharacter::Look(const FInputActionValue& Value)
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
+}
+
+void AKandelaProjectPlusCharacter::ApplyEffectToSelf(TSubclassOf<UGameplayEffect> EffectClass)
+{
+	if (!AbilitySystemComponent || !EffectClass) return;
+
+	const FGameplayEffectContextHandle Ctx = AbilitySystemComponent->MakeEffectContext();
+	const FGameplayEffectSpecHandle Spec = AbilitySystemComponent->MakeOutgoingSpec(EffectClass, 1.f, Ctx);
+	if (Spec.IsValid())
+	{
+		AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());
+	}
+}
+
+void AKandelaProjectPlusCharacter::GiveSprintAbility()
+{
+	if (!AbilitySystemComponent) return;
+
+	AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(UGASprint::StaticClass(), 1, 0));
+}
+
+void AKandelaProjectPlusCharacter::OnSprintStarted(const FInputActionValue& Value)
+{
+	if (!AbilitySystemComponent) return;
+
+	AbilitySystemComponent->TryActivateAbilitiesByTag(
+		FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Ability.Sprint"))
+	);
+}
+
+void AKandelaProjectPlusCharacter::OnSprintCompleted(const FInputActionValue& Value)
+{
+	if (!AbilitySystemComponent) return;
+
+	FGameplayTagContainer tags;
+	tags.AddTag(FGameplayTag::RequestGameplayTag("Ability.Sprint"));
+
+	AbilitySystemComponent->CancelAbilities(&tags);
+}
+
+UAbilitySystemComponent* AKandelaProjectPlusCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
 }

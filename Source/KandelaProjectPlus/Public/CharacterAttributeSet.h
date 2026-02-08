@@ -7,9 +7,34 @@
 #include "AbilitySystemComponent.h"
 #include "CharacterAttributeSet.generated.h"
 
+#define ATTRIBUTE_ACCESSORS(ClassName, PropertyName) \
+GAMEPLAYATTRIBUTE_PROPERTY_GETTER(ClassName, PropertyName) \
+GAMEPLAYATTRIBUTE_VALUE_GETTER(PropertyName) \
+GAMEPLAYATTRIBUTE_VALUE_SETTER(PropertyName) \
+GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
 
 UCLASS()
 class KANDELAPROJECTPLUS_API UCharacterAttributeSet : public UAttributeSet
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
+
+public:
+    UPROPERTY(BlueprintReadOnly, Category = "Stamina")
+    FGameplayAttributeData Stamina;
+    ATTRIBUTE_ACCESSORS(UCharacterAttributeSet, Stamina)
+
+        UPROPERTY(BlueprintReadOnly, Category = "Stamina")
+    FGameplayAttributeData MaxStamina;
+    ATTRIBUTE_ACCESSORS(UCharacterAttributeSet, MaxStamina)
+
+        UPROPERTY(BlueprintReadOnly, Category = "Stamina")
+    FGameplayAttributeData StaminaRegenRate;
+    ATTRIBUTE_ACCESSORS(UCharacterAttributeSet, StaminaRegenRate)
+
+        UPROPERTY(BlueprintReadOnly, Category = "Stamina")
+    FGameplayAttributeData StaminaDrainRate;
+    ATTRIBUTE_ACCESSORS(UCharacterAttributeSet, StaminaDrainRate)
+
+        virtual void PostGameplayEffectExecute(
+            const FGameplayEffectModCallbackData& Data) override;
 };
