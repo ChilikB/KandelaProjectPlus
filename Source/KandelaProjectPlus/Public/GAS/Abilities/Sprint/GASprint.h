@@ -2,7 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
-#include "GameplayEffectTypes.h"
 #include "GASprint.generated.h"
 
 class UGameplayEffect;
@@ -41,4 +40,7 @@ protected:
 private:
     float SavedWalkSpeed = 0.f;
     FActiveGameplayEffectHandle DrainHandle;
+
+    UFUNCTION()
+    void OnStaminaChanged();
 };

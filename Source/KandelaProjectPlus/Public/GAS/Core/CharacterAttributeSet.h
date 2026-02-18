@@ -23,18 +23,18 @@ public:
     FGameplayAttributeData Stamina;
     ATTRIBUTE_ACCESSORS(UCharacterAttributeSet, Stamina)
 
-        UPROPERTY(BlueprintReadOnly, Category = "Stamina")
+    UPROPERTY(BlueprintReadOnly, Category = "Stamina")
     FGameplayAttributeData MaxStamina;
     ATTRIBUTE_ACCESSORS(UCharacterAttributeSet, MaxStamina)
 
-        UPROPERTY(BlueprintReadOnly, Category = "Stamina")
+    UPROPERTY(BlueprintReadOnly, Category = "Stamina")
     FGameplayAttributeData StaminaRegenRate;
     ATTRIBUTE_ACCESSORS(UCharacterAttributeSet, StaminaRegenRate)
 
-        UPROPERTY(BlueprintReadOnly, Category = "Stamina")
+    UPROPERTY(BlueprintReadOnly, Category = "Stamina")
     FGameplayAttributeData StaminaDrainRate;
     ATTRIBUTE_ACCESSORS(UCharacterAttributeSet, StaminaDrainRate)
 
-        virtual void PostGameplayEffectExecute(
-            const FGameplayEffectModCallbackData& Data) override;
+    virtual void PostGameplayEffectExecute(
+        const FGameplayEffectModCallbackData& Data) override;
 };

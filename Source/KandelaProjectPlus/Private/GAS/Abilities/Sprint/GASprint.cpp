@@ -4,6 +4,7 @@
 #include "CharacterAttributeSet.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Abilities/Tasks/AbilityTask_WaitAttributeChange.h"
 #include "GEStaminaDrain.h"
 
 UGASprint::UGASprint()
@@ -24,8 +25,21 @@ void UGASprint::ActivateAbility(
     const FGameplayAbilityActivationInfo ActivationInfo,
     const FGameplayEventData* TriggerEventData)
 {
+    if (!ActorInfo || !ActorInfo->AvatarActor.IsValid())
+    {
+        EndAbility(Handle, ActorInfo, ActivationInfo, false, true);
+        return;
+    }
+
     ACharacter* Character = Cast<ACharacter>(ActorInfo->AvatarActor.Get());
     if (!Character)
+    {
+        EndAbility(Handle, ActorInfo, ActivationInfo, false, true);
+        return;
+    }
+
+    UCharacterMovementComponent* Move = Character->GetCharacterMovement();
+    if (!Move)
     {
         EndAbility(Handle, ActorInfo, ActivationInfo, false, true);
         return;
@@ -47,7 +61,14 @@ void UGASprint::ActivateAbility(
         return;
     }
 
-    UCharacterMovementComponent* Move = Character->GetCharacterMovement();
+    UAbilityTask_WaitAttributeChange* Task = 
+        UAbilityTask_WaitAttributeChange::WaitForAttributeChange(this, UCharacterAttributeSet::GetStaminaAttribute(), FGameplayTag(), FGameplayTag(), false);
+    
+    if (Task) {
+        Task->OnChange.AddDynamic(this, &UGASprint::OnStaminaChanged);
+        Task->ReadyForActivation();
+    }
+
     SavedWalkSpeed = Move->MaxWalkSpeed;
     Move->MaxWalkSpeed = SprintSpeed;
 
@@ -57,6 +78,20 @@ void UGASprint::ActivateAbility(
     if (Spec.IsValid())
     {
         DrainHandle = ASC->ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());
+    }
+}
+
+void UGASprint::OnStaminaChanged()
+{
+    UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+    if (ASC)
+    {
+        float CurrentStamina = ASC->GetNumericAttribute(UCharacterAttributeSet::GetStaminaAttribute());
+
+        if (CurrentStamina <= 0.f)
+        {
+            EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+        }
     }
 }
 
