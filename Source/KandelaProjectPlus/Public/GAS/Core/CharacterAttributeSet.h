@@ -19,6 +19,16 @@ class KANDELAPROJECTPLUS_API UCharacterAttributeSet : public UAttributeSet
     GENERATED_BODY()
 
 public:
+    UCharacterAttributeSet();
+
+    UPROPERTY(BlueprintReadOnly, Category = "Health")
+    FGameplayAttributeData Health;
+    ATTRIBUTE_ACCESSORS(UCharacterAttributeSet, Health)
+
+    UPROPERTY(BlueprintReadOnly, Category = "Health")
+    FGameplayAttributeData MaxHealth;
+    ATTRIBUTE_ACCESSORS(UCharacterAttributeSet, MaxHealth)
+
     UPROPERTY(BlueprintReadOnly, Category = "Stamina")
     FGameplayAttributeData Stamina;
     ATTRIBUTE_ACCESSORS(UCharacterAttributeSet, Stamina)
@@ -37,4 +47,8 @@ public:
 
     virtual void PostGameplayEffectExecute(
         const FGameplayEffectModCallbackData& Data) override;
+
+    virtual void PreAttributeChange(
+        const FGameplayAttribute& Attribute,
+        float& NewValue) override;
 };

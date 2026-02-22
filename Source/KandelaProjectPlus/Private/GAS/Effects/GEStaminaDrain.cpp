@@ -11,8 +11,8 @@ UGEStaminaDrain::UGEStaminaDrain() {
     FGameplayModifierInfo Mod;
     Mod.Attribute = UCharacterAttributeSet::GetStaminaAttribute();
     Mod.ModifierOp = EGameplayModOp::Additive;
-
-    FScalableFloat Mag(-2.5f);
+    
+    FScalableFloat Mag(-5.0f);
     Mod.ModifierMagnitude = FGameplayEffectModifierMagnitude(Mag);
 
     Modifiers.Add(Mod);
